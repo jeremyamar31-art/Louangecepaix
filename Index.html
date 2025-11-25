@@ -1,0 +1,358 @@
+<!--
+  site-chants - single-file static web app (index.html)
+  ----------------------------------------------------
+  Purpose: fetch a published Google Sheet CSV, parse it, and render a responsive,
+  accessible table of songs with filters, search and clickable badges for PDFs and audios.
+
+  How to use / change config (see the top of the <script> for quick changes):
+    - SHEET_CSV_URL: change to your published CSV URL
+    - GOOGLE_FORM_URL: change to your Google Form URL (opens when clicking "Ajouter un chant")
+    - LOGO_FILENAME: replace logo.png in project root
+
+  Deployment: drop this file (and logo.png) in your Netlify site repository and push.
+  No backend required. PapaParse is used (CDN). Works entirely client-side.
+
+  Notes:
+    - The CSV header mapping is resilient: it normalizes header names (lowercase,
+      accents removed, spaces/punctuation collapsed) and tries multiple variants
+      for each expected column.
+    - Google Drive links are converted to direct-download links when possible.
+    - Accessibility: keyboard focus styles, alt text on logo, semantic elements.
+
+  Files produced: single index.html (recommended). If you prefer separate files,
+  extract the <style> into styles.css and the <script> into app.js and update index.html.
+-->
+
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Répertoire de chants</title>
+  <!-- PapaParse CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    :root{
+      --bg: #fbfbf8;
+      --card: #ffffff;
+      --muted: #6b6b6b;
+      --accent: #2d6a4f; /* example, will harmonize with logo */
+      --mustard: #d4a11a; /* audio badges and add button */
+      --badge-bg: #eef3ef;
+      --gap: 12px;
+      --row-height: 56px; /* fixed row height requirement */
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;background:var(--bg);margin:0;color:#0b0b0b}
+    .topbar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:linear-gradient(0deg, rgba(255,255,255,0.6), rgba(255,255,255,0.6));box-shadow:0 1px 0 rgba(0,0,0,0.04);position:sticky;top:0;z-index:40}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{height:44px;width:44px;object-fit:contain}
+    .title{font-size:18px;font-weight:600}
+    .controls{margin-left:auto;display:flex;gap:10px;align-items:center}
+    .search{display:flex;align-items:center;gap:8px;background:var(--card);padding:6px 10px;border-radius:8px;box-shadow:0 1px 4px rgba(11,11,11,0.03)}
+    .search input{border:0;outline:none;font-size:14px;background:transparent;width:240px}
+    .btn{background:var(--mustard);color:#10220a;border:none;padding:8px 12px;border-radius:8px;font-weight:600;cursor:pointer}
+    .btn:focus{outline:3px solid rgba(212,161,26,0.25)}
+    main{padding:16px;max-width:1200px;margin:12px auto}
+    .card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(16,22,10,0.04)}
+
+    /* table */
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    thead th{position:sticky;top:72px;background:var(--card);text-align:left;padding:10px 12px;font-size:13px;color:var(--muted);font-weight:600}
+    tbody tr{height:var(--row-height);border-bottom:1px solid #f2f2f2}
+    td{padding:8px 12px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    /* emphasize first column */
+    td.title-cell{font-weight:700;color:var(--accent);font-size:15px;max-width:280px}
+    td.small{font-size:12px;color:var(--muted);max-width:110px}
+
+    /* badges */
+    .badges{display:flex;gap:8px;flex-wrap:wrap}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 8px;border-radius:999px;font-size:13px;background:var(--badge-bg);cursor:default}
+    .badge.link{cursor:pointer;text-decoration:none}
+    .badge.audio{background:rgba(212,161,26,0.12);color: #3b2f00;font-weight:600}
+    .badge.theme{background:#eef6ff;color:#235fa8}
+
+    /* filter area */
+    .filters{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+    select{padding:8px;border-radius:8px;border:1px solid #e7e7e7}
+
+    /* responsive */
+    @media (max-width:900px){
+      .search input{width:120px}
+      thead th:nth-child(3), td:nth-child(3){display:none} /* hide Recueil on small screens */
+      thead th:nth-child(7), td:nth-child(7){display:none} /* hide Références on small screens */
+    }
+
+    /* focus/keyboard */
+    a:focus, button:focus{outline:3px solid rgba(34,139,34,0.12)}
+  </style>
+</head>
+<body>
+  <header class="topbar" role="banner">
+    <div class="brand">
+      <img src="logo.png" alt="Logo du répertoire" id="logo" />
+      <div>
+        <div class="title">Répertoire de chants</div>
+        <div style="font-size:12px;color:var(--muted)">Catalogue communautaire</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="search" role="search" aria-label="Recherche dans les chants">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.35-4.35" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="11" cy="11" r="6" stroke="#6b6b6b" stroke-width="2"></circle></svg>
+        <input id="searchInput" placeholder="Recherche (titre, auteur, thème...)" aria-label="Recherche" />
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div>
+          <label for="themeFilter" style="font-size:12px;color:var(--muted);">Filtrer par thème</label><br>
+          <select id="themeFilter" aria-label="Filtrer par thème">
+            <option value="">Tous les thèmes</option>
+          </select>
+        </div>
+        <button id="addBtn" class="btn" aria-haspopup="true">Ajouter un chant</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="card">
+      <div class="filters" aria-hidden="true">
+        <div style="font-size:13px;color:var(--muted)">Résultats: <span id="count">0</span></div>
+      </div>
+
+      <div style="overflow:auto">
+        <table aria-describedby="count">
+          <thead>
+            <tr>
+              <th style="width:28%">Titre</th>
+              <th>Auteur</th>
+              <th>Recueil</th>
+              <th>Thèmes</th>
+              <th>Partition</th>
+              <th>Audios</th>
+              <th>Références</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- rows injected here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    /*************** Configuration (change these) ****************/
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT3t8tr68VdxmjMamPTnlQQuvpjISPBmAkiDHsZr_vSz5EHk-4Z8JQB58xS-4rAP-72dOi4Mr8FmR9i/pub?output=csv";
+    const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfjnD-BKH22nMH_Wq3me611ffIaSnI-BeQEDQ48lbWN0FZo2g/viewform";
+    const LOGO_FILENAME = "logo.png";
+    /*************************************************************/
+
+    // Utility: normalize header keys
+    function normalizeKey(s){
+      if(!s) return '';
+      return s.toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+    }
+
+    // Convert Google Drive links to direct download when possible
+    function driveToDirect(url){
+      if(!url) return null;
+      try{
+        const u = url.trim();
+        // common /file/d/ID/ pattern
+        let m = u.match(/\/file\/d\/(.*?)\//);
+        if(m && m[1]) return `https://drive.google.com/uc?export=download&id=${m[1]}`;
+        m = u.match(/id=([a-zA-Z0-9_-]+)/);
+        if(m && m[1]) return `https://drive.google.com/uc?export=download&id=${m[1]}`;
+        // share link with ?usp=sharing but with id embedded
+        m = u.match(/open\?id=([a-zA-Z0-9_-]+)/);
+        if(m && m[1]) return `https://drive.google.com/uc?export=download&id=${m[1]}`;
+        // fallback: return as-is if it looks like http
+        if(u.startsWith('http')) return u;
+        return null;
+      }catch(e){return null}
+    }
+
+    // Map headers to expected fields, supports many variations
+    function mapRow(rawRow, headerMap){
+      const get = (variants)=>{
+        for(const v of variants){
+          const k = normalizeKey(v);
+          if(headerMap[k]!==undefined) return rawRow[headerMap[k]];
+        }
+        return '';
+      };
+
+      return {
+        titre: get(['Titre','title','TITRE']),
+        auteur: get(['Auteur','author','AUTEUR']),
+        recueil: get(['Recueil','recueil','collection','book']),
+        themes: get(['Thèmes','Themes','theme','tags']),
+        partition1: get(['Partition (PDF)','Partition (PDF 2)','Partition','partition_pdf','partition1']),
+        partition2: get(['Partition (PDF 2)','Partition 2','partition_2']),
+        melodie: get(['Mélodie','Melodie','Melody','mélodie']),
+        alto: get(['Alto','alto']),
+        tenor: get(['Ténor','Tenor','tenor']),
+        references: get(['Références bibliques','References bibliques','References','references','reference_biblique'])
+      };
+    }
+
+    // Render helpers
+    function createBadge(text, href=null, extraClass=''){
+      const el = document.createElement(href? 'a' : 'span');
+      el.className = 'badge' + (href? ' link' : '') + (extraClass? ' '+extraClass : '');
+      el.textContent = text;
+      if(href){
+        el.setAttribute('href', href);
+        el.setAttribute('target','_blank');
+        el.setAttribute('rel','noopener noreferrer');
+      }
+      return el;
+    }
+
+    // Main state
+    let songs = [];
+    let themesSet = new Set();
+
+    function renderTable(list){
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      list.forEach(row=>{
+        const tr = document.createElement('tr');
+
+        const tdTitle = document.createElement('td'); tdTitle.className='title-cell'; tdTitle.title = row.titre || '';
+        tdTitle.textContent = row.titre || '-'; tr.appendChild(tdTitle);
+
+        const tdAuthor = document.createElement('td'); tdAuthor.className='small'; tdAuthor.textContent = row.auteur || ''; tr.appendChild(tdAuthor);
+
+        const tdRecueil = document.createElement('td'); tdRecueil.className='small'; tdRecueil.textContent = row.recueil || ''; tr.appendChild(tdRecueil);
+
+        const tdThemes = document.createElement('td');
+        const themesWrapper = document.createElement('div'); themesWrapper.className='badges';
+        const themes = (row.themes || '').toString().split(/[;,|\/]+/).map(s=>s.trim()).filter(Boolean);
+        themes.forEach(t=>{
+          const b = createBadge(t, null, 'theme');
+          themesWrapper.appendChild(b);
+        });
+        tdThemes.appendChild(themesWrapper); tr.appendChild(tdThemes);
+
+        const tdParts = document.createElement('td');
+        const pWrap = document.createElement('div'); pWrap.className='badges';
+        [row.partition1,row.partition2].forEach((p,idx)=>{
+          if(!p) return;
+          const url = driveToDirect(p) || p;
+          const label = idx===0? 'Partition' : 'Partition 2';
+          const b = createBadge(label, url);
+          pWrap.appendChild(b);
+        });
+        tdParts.appendChild(pWrap); tr.appendChild(tdParts);
+
+        const tdAudios = document.createElement('td');
+        const aWrap = document.createElement('div'); aWrap.className='badges';
+        [['Mélodie',row.melodie],['Alto',row.alto],['Ténor',row.tenor]].forEach(([label,val])=>{
+          if(!val) return;
+          const url = driveToDirect(val) || val;
+          const b = createBadge(label, url, 'audio');
+          aWrap.appendChild(b);
+        });
+        tdAudios.appendChild(aWrap); tr.appendChild(tdAudios);
+
+        const tdRef = document.createElement('td'); tdRef.className='small'; tdRef.textContent = row.references || ''; tr.appendChild(tdRef);
+
+        tbody.appendChild(tr);
+      });
+      document.getElementById('count').textContent = list.length;
+    }
+
+    // Search + filter
+    function applyFilters(){
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const theme = document.getElementById('themeFilter').value;
+      const filtered = songs.filter(s=>{
+        // theme filter
+        if(theme){
+          const tlist = (s.themes||'').toString().toLowerCase();
+          if(!tlist.split(/[;,|\\/]+/).some(x=>x.trim()===theme.toLowerCase())) return false;
+        }
+        if(!q) return true;
+        // search in title, author, recueil, themes, references
+        return [s.titre,s.auteur,s.recueil,s.themes,s.references].some(f=> (f||'').toString().toLowerCase().includes(q));
+      });
+      renderTable(filtered);
+    }
+
+    // Populate theme filter
+    function buildThemeOptions(){
+      const sel = document.getElementById('themeFilter');
+      // clear except first
+      sel.innerHTML = '<option value="">Tous les thèmes</option>';
+      const arr = Array.from(themesSet).sort((a,b)=>a.localeCompare(b));
+      arr.forEach(t=>{
+        const opt = document.createElement('option'); opt.value = t; opt.textContent = t; sel.appendChild(opt);
+      });
+    }
+
+    // Load CSV
+    function loadCSV(){
+      Papa.parse(SHEET_CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results){
+          const data = results.data || [];
+          // build header map
+          const headerMap = {};
+          const firstRow = results.meta && results.meta.fields? results.meta.fields : (data[0]||{});
+          const fields = results.meta && results.meta.fields ? results.meta.fields : Object.keys(firstRow||{});
+          fields.forEach((f,idx)=>{ headerMap[normalizeKey(f)] = f; });
+
+          songs = data.map(raw=>{
+            // Because headerMap maps normalized->original header name, we can access raw[original]
+            const rMapped = {};
+            for(const key in raw){ rMapped[normalizeKey(key)] = raw[key]; }
+            // reconstruct a rawRow object indexed by normalized keys
+            const rawRow = {};
+            for(const k in rMapped) rawRow[k] = rMapped[k];
+
+            // mapRow expects headerMap mapping normalized->index/key; adapt
+            // we'll build a fake headerMap that maps normalizedName -> normalizedName key
+            const fakeHeaderMap = {};
+            Object.keys(rMapped).forEach(k=>{ fakeHeaderMap[k] = k; });
+
+            const mapped = mapRow(rMapped, fakeHeaderMap);
+
+            // collect themes
+            const themeParts = (mapped.themes||'').toString().split(/[;,|\\/]+/).map(s=>s.trim()).filter(Boolean);
+            themeParts.forEach(t=>themesSet.add(t));
+
+            return mapped;
+          });
+
+          buildThemeOptions();
+          renderTable(songs);
+        },
+        error: function(err){
+          console.error('Erreur chargement CSV', err);
+          document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="padding:20px;color:var(--muted)">Impossible de charger la feuille. Vérifiez l'URL du CSV et que la feuille est publiée.</td></tr>';
+        }
+      });
+    }
+
+    // init
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('themeFilter').addEventListener('change', applyFilters);
+    document.getElementById('addBtn').addEventListener('click', ()=>{ window.open(GOOGLE_FORM_URL, '_blank'); });
+
+    // load
+    loadCSV();
+
+    /*
+      README (short):
+      - To change the Google Sheet: publish it to CSV (File > Publish to web > CSV) and replace SHEET_CSV_URL.
+      - To change the Google Form: put the form URL in GOOGLE_FORM_URL.
+      - To change the logo: replace logo.png at the site root. Alt text is set on the <img>.
+      - For Netlify: create a repo with index.html and logo.png, connect Netlify and deploy. No build step required.
+    */
+  </script>
+</body>
+</html>
