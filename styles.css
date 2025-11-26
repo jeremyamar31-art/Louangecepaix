@@ -1,35 +1,76 @@
 :root{
-  --bg: #fbfbf8;
-  --card: #ffffff;
-  --muted: #6b6b6b;
-  --accent: #2d6a4f;
-  --mustard: #d4a11a;
-  --badge-bg: #eef3ef;
-  --row-height: 56px;
-  font-family: Inter, system-ui, Arial;
+--table-bg: #ffffff;
+--row-height: 56px;
+--font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
-body{background:var(--bg);margin:0;color:#0b0b0b}
-.topbar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,0.04);position:sticky;top:0;z-index:40}
+
+
+*{box-sizing: border-box}
+html,body{height:100%}
+body{
+margin:0;
+font-family:var(--font-sans);
+background:var(--bg);
+color:#111;
+-webkit-font-smoothing:antialiased;
+}
+
+
+.topbar{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:16px;
+padding:12px 16px;
+background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.8));
+border-bottom:1px solid #eee;
+position:sticky;
+top:0;
+z-index:20;
+}
 .brand{display:flex;align-items:center;gap:12px}
-.brand img{height:44px;width:44px;object-fit:contain}
-.title{font-size:18px;font-weight:600}
-.subtitle{font-size:12px;color:var(--muted)}
-.controls{margin-left:auto;display:flex;gap:12px;align-items:center}
-.search input{padding:6px 10px;border-radius:8px;border:1px solid #ddd;font-size:14px;width:200px}
-.btn{background:var(--mustard);color:#10220a;border:0;padding:8px 12px;border-radius:8px;font-weight:600;cursor:pointer}
-.btn:focus{outline:3px solid rgba(212,161,26,0.25)}
-main{padding:16px;max-width:1200px;margin:auto}
-.card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(16,22,10,0.04)}
-.table-wrapper{overflow:auto}
-table{width:100%;border-collapse:collapse;font-size:14px}
-thead th{position:sticky;top:72px;background:var(--card);padding:10px 12px;font-size:13px;color:var(--muted);font-weight:600;text-align:left}
-tbody tr{height:var(--row-height);border-bottom:1px solid #f2f2f2}
-td{padding:8px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-td.title-cell{font-weight:700;color:var(--accent);font-size:15px}
-td.small{font-size:12px;color:var(--muted)}
-.badges{display:flex;gap:8px;flex-wrap:wrap}
-.badge{padding:6px 8px;border-radius:999px;font-size:13px;background:var(--badge-bg)}
-.badge.link{text-decoration:none;cursor:pointer}
-.badge.audio{background:rgba(212,161,26,0.12);color:#3b2f00;font-weight:600}
-.badge.theme{background:#eef6ff;color:#235fa8}
-@media(max-width:900px){thead th:nth-child(3),td:nth-child(3){display:none}thead th:nth-child(7),td:nth-child(7){display:none}}
+#logo{height:40px;width:40px;object-fit:contain}
+#app-title{font-size:1rem;margin:0}
+.actions{display:flex;align-items:center;gap:8px}
+.actions input[type=search]{padding:8px 10px;border-radius:8px;border:1px solid #ddd;width:220px}
+.actions select{padding:8px;border-radius:8px;border:1px solid #ddd}
+.btn{
+display:inline-block;padding:8px 12px;border-radius:10px;background:var(--mustard);color:#111;text-decoration:none;font-weight:600
+}
+
+
+.table-wrapper{padding:16px;overflow:auto}
+#songsTable{width:100%;border-collapse:collapse;background:var(--table-bg);min-width:900px}
+#songsTable thead th{position:sticky;top:56px;background:#fff;padding:10px;text-align:left;border-bottom:2px solid #eee}
+#songsTable tbody tr{height:var(--row-height);border-bottom:1px solid #f0f0f0}
+#songsTable td{padding:8px 10px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title-col{width:30%}
+.small-col{width:10%;font-size:0.82rem;color:var(--muted)}
+.file-col{width:12%}
+
+
+/* badges */
+.badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:0.85rem;line-height:1;cursor:default}
+.badge.link{cursor:pointer;text-decoration:none;border:1px solid rgba(0,0,0,0.06)}
+.badge.theme{background:transparent;border:1px solid #eee;color:var(--muted)}
+.badge.audio{background:var(--mustard);color:#111}
+.badge.partition{background:#f3f3f3}
+
+
+/* force single-line labels like Mélodie Alto Ténor */
+.badge *{white-space:nowrap}
+
+
+/* Responsive */
+@media (max-width:900px){
+#songsTable{min-width:700px}
+.actions input[type=search]{width:140px}
+}
+@media (max-width:600px){
+.actions{flex-wrap:wrap}
+#songsTable{min-width:600px}
+}
+
+
+.footer{padding:12px 16px;text-align:center;color:var(--muted);font-size:0.85rem}
