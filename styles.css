@@ -4,7 +4,7 @@
 :root {
   --bg: #f8f7f3;
   --text: #1a1a1a;
-  --accent: #b58d2b;      /* Jaune moutarde pour les bulles audio + bouton */
+  --accent: #b58d2b;      /* Jaune moutarde pour bulles + boutons */
   --accent-light: #e9d9a2;
   --primary: #3e4a56;
   --border: #d6d6d6;
@@ -70,21 +70,28 @@ body {
    ========================================================= */
 .btn {
   display: inline-block;
-  padding: 0.45rem 0.9rem;
-  border-radius: var(--radius);
+  padding: 0.45rem 1rem;
+  border-radius: 25px;       /* Style moderne */
   text-decoration: none;
   font-weight: 600;
-  transition: 0.2s ease;
+  transition: 0.2s ease-in-out;
   white-space: nowrap;
 }
 
 .add-btn {
   background: var(--accent);
   color: white;
+  border: none;
 }
 
 .add-btn:hover {
-  background: #caa641;
+  background: #c09524;       /* Léger foncé */
+  transform: translateY(-2px);
+}
+
+/* Empêche toute forme de soulignement */
+.btn, .btn:hover, .btn:focus {
+  text-decoration: none !important;
 }
 
 /* =========================================================
@@ -128,8 +135,8 @@ body {
 .songs-table td {
   padding: 0.4rem 0.5rem;
   border-bottom: 1px solid var(--border);
-  height: 3rem;              /* Hauteur FIXE des lignes */
-  white-space: nowrap;        /* AUCUN retour à la ligne */
+  height: 3rem;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -147,7 +154,7 @@ body {
   color: var(--primary);
 }
 
-/* Petites colonnes */
+/* Colonnes compactes (Auteur, Recueil, Référence) */
 .small-text {
   font-size: var(--small-text);
   color: #444;
@@ -156,37 +163,46 @@ body {
 /* =========================================================
    Bulles / Badges
    ========================================================= */
+
+/* Base commune */
 .badge {
   display: inline-block;
-  padding: 0.15rem 0.45rem;
+  padding: 0.25rem 0.55rem;
   margin: 0 0.15rem;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   border-radius: 20px;
-  background: #ddd;
-  color: #333;
-  max-width: 120px;
+  max-width: 130px;
   text-overflow: ellipsis;
   overflow: hidden;
   vertical-align: middle;
+  text-decoration: none !important;    /* PAS DE SOULIGNEMENT */
 }
 
-/* Thèmes : bulles non cliquables */
-.badge-theme {
-  background: var(--accent-light);
-  color: var(--primary);
-  cursor: default;
-}
-
-/* Partition PDF : bulles bleues */
+/* Bulles cliquables : partitions bleues */
 .badge-score {
   background: #466fb7;
   color: white;
 }
 
-/* Audios : bulles jaune moutarde */
+/* Bulles cliquables : audios moutarde */
 .badge-audio {
   background: var(--accent);
   color: white;
+}
+
+/* Bulles non cliquables → Thèmes */
+.badge-theme {
+  background: var(--accent-light);
+  color: var(--primary);
+  cursor: default;
+  border: 1px solid #d1c48c;            /* Légère bordure pour distinguer */
+}
+
+/* Supprime définitivement tout soulignement même sur hover */
+.badge:hover,
+.badge:focus,
+.badge:active {
+  text-decoration: none !important;
 }
 
 /* =========================================================
@@ -211,7 +227,7 @@ body {
   white-space: nowrap;
 }
 
-/* Avertissement JS désactivé */
+/* JS désactivé */
 .noscript-warning {
   background: #900;
   color: white;
