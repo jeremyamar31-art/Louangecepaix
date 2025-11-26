@@ -1,89 +1,197 @@
-// Chargement du CSV et initialisation
-const tableBody = document.getElementById('tableBody');
-const searchInput = document.getElementById('searchInput');
-const themeFilter = document.getElementById('themeFilter');
-const countSpan = document.getElementById('count');
-let songs = [];
+/* -------------------------------------------------
+   Configuration générale
+------------------------------------------------- */
+const SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vT3t8tr68VdxmjMamPTnlQQuvpjISPBmAkiDHsZr_vSz5EHk-4Z8JQB58xS-4rAP-72dOi4Mr8FmR9i/pub?output=csv";
 
-// Récupération du CSV situé dans le même dossier
-fetch('repertoire.csv')
-  .then(response => response.text())
-  .then(csv => {
-    Papa.parse(csv, {
-      header: true,
-      skipEmptyLines: true,
-      complete: results => {
-        songs = results.data;
-        initThemeFilter();
-        renderTable();
-      }
-    });
-  });
+const GOOGLE_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSfjnD-BKH22nMH_Wq3me611ffIaSnI-BeQEDQ48lbWN0FZo2g/viewform";
 
-// Mise à jour du filtre thèmes
-function initThemeFilter() {
-  const themes = new Set();
-  songs.forEach(s => {
-    if (s.Themes) s.Themes.split(',').forEach(t => themes.add(t.trim()));
-  });
-  themes.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t;
-    opt.textContent = t;
-    themeFilter.appendChild(opt);
+const LOGO_FILENAME = "logo.png";
+
+/* -------------------------------------------------
+   Chargement des données CSV via PapaParse
+------------------------------------------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  loadSheetData();
+  setupUI();
+});
+
+let allSongs = []; // toutes les lignes du CSV
+let filteredSongs = []; // après recherche + filtres
+
+/* -------------------------------------------------
+   1) Téléchargement du CSV Google Sheet
+------------------------------------------------- */
+function loadSheetData() {
+  Papa.parse(SHEET_CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function (results) {
+      allSongs = results.data.map(normalizeRow);
+      filteredSongs = [...allSongs];
+      populateThemeFilter(allSongs);
+      renderTable(filteredSongs);
+    },
   });
 }
 
-// Recherche + filtrage
-searchInput.addEventListener('input', renderTable);
-themeFilter.addEventListener('change', renderTable);
+/* -------------------------------------------------
+   2) Normalisation d'une ligne CSV
+------------------------------------------------- */
+function normalizeRow(row) {
+  const safe = (v) => (v ? v.trim() : "");
 
-function renderTable() {
-  const q = searchInput.value.toLowerCase();
-  const theme = themeFilter.value;
+  return {
+    titre: safe(row["Titre"] || row["title"]),
+    auteur: safe(row["Auteur"] || row["author"]),
+    recueil: safe(row["Recueil"] || ""),
 
-  const filtered = songs.filter(song => {
-    const matchesSearch = Object.values(song).some(v =>
-      (v || '').toLowerCase().includes(q)
-    );
+    themes: safe(row["Thèmes"] || row["Themes"] || "")
+      .split(",")
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0),
 
-    const matchesTheme = !theme || (song.Themes && song.Themes.includes(theme));
+    partition1: convertGoogleLink(safe(row["Partition (PDF)"] || "")),
+    partition2: convertGoogleLink(safe(row["Partition (PDF 2)"] || "")),
 
-    return matchesSearch && matchesTheme;
-  });
+    audioMelodie: convertGoogleLink(safe(row["Mélodie"] || "")),
+    audioAlto: convertGoogleLink(safe(row["Alto"] || "")),
+    audioTenor: convertGoogleLink(safe(row["Ténor"] || "")),
 
-  countSpan.textContent = filtered.length;
-  tableBody.innerHTML = '';
+    references: safe(row["Références bibliques"] || row["Refs"] || ""),
+  };
+}
 
-  filtered.forEach(song => {
-    const tr = document.createElement('tr');
+/* -------------------------------------------------
+   Conversion des liens Google Drive → direct download
+------------------------------------------------- */
+function convertGoogleLink(url) {
+  if (!url || !url.includes("drive.google.com")) return url;
+  const idMatch = url.match(/\/d\/(.*?)\//);
+  if (!idMatch) return url;
+  return `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
+}
+
+/* -------------------------------------------------
+   3) Affichage du tableau principal
+------------------------------------------------- */
+function renderTable(data) {
+  const tbody = document.querySelector("#songsTableBody");
+  tbody.innerHTML = "";
+
+  data.forEach((song) => {
+    const tr = document.createElement("tr");
+
     tr.innerHTML = `
-      <td class="title-cell">${song.Titre || ''}</td>
-      <td>${song.Auteur || ''}</td>
-      <td>${song.Recueil || ''}</td>
-      <td>${formatThemes(song.Themes)}</td>
-      <td>${formatLinks(song.Partition)}</td>
-      <td>${formatAudio(song.Audio)}</td>
-      <td>${formatLinks(song.References)}</td>
+      <td class="col-title">${song.titre}</td>
+      <td class="col-small">${song.auteur}</td>
+      <td class="col-small">${song.recueil}</td>
+      <td>${renderThemeBadges(song.themes)}</td>
+      <td>${renderPartitionBadges(song)}</td>
+      <td>${renderAudioBadges(song)}</td>
+      <td class="col-small">${song.references}</td>
     `;
-    tableBody.appendChild(tr);
+
+    tbody.appendChild(tr);
   });
 }
 
-// Formatage des thèmes
-function formatThemes(list) {
-  if (!list) return '';
-  return `<div class="badges">${list.split(',').map(t => `<span class="badge theme">${t.trim()}</span>`).join('')}</div>`;
+/* -------------------------------------------------
+   4) Badges Thèmes
+------------------------------------------------- */
+function renderThemeBadges(list) {
+  return list
+    .map((t) => `<span class="badge badge-theme">${t}</span>`)
+    .join("");
 }
 
-// Formatage générique des liens
-function formatLinks(list) {
-  if (!list) return '';
-  return `<div class="badges">${list.split(',').map(l => `<a class="badge link" href="${l.trim()}" target="_blank">Lien</a>`).join('')}</div>`;
+/* -------------------------------------------------
+   5) Badges Partition
+------------------------------------------------- */
+function renderPartitionBadges(s) {
+  let out = "";
+
+  if (s.partition1)
+    out += `<a class="badge badge-link" href="${s.partition1}" target="_blank">PDF 1</a>`;
+
+  if (s.partition2)
+    out += `<a class="badge badge-link" href="${s.partition2}" target="_blank">PDF 2</a>`;
+
+  return out || "";
 }
 
-// Badges pour audios
-function formatAudio(list) {
-  if (!list) return '';
-  return `<div class="badges">${list.split(',').map(l => `<a class="badge audio" href="${l.trim()}" target="_blank">▶︎ Audio</a>`).join('')}</div>`;
+/* -------------------------------------------------
+   6) Badges Audio (moutarde)
+------------------------------------------------- */
+function renderAudioBadges(s) {
+  let out = "";
+
+  if (s.audioMelodie)
+    out += `<a class="badge badge-audio" href="${s.audioMelodie}" target="_blank">Mélodie</a>`;
+
+  if (s.audioAlto)
+    out += `<a class="badge badge-audio" href="${s.audioAlto}" target="_blank">Alto</a>`;
+
+  if (s.audioTenor)
+    out += `<a class="badge badge-audio" href="${s.audioTenor}" target="_blank">Ténor</a>`;
+
+  return out || "";
+}
+
+/* -------------------------------------------------
+   7) Recherche + Filtre
+------------------------------------------------- */
+function setupUI() {
+  document
+    .querySelector("#searchInput")
+    .addEventListener("input", applyFilters);
+
+  document
+    .querySelector("#themeFilter")
+    .addEventListener("change", applyFilters);
+
+  document.querySelector("#addSongBtn").addEventListener("click", () => {
+    window.open(GOOGLE_FORM_URL, "_blank");
+  });
+}
+
+function populateThemeFilter(all) {
+  const select = document.querySelector("#themeFilter");
+  const themes = new Set();
+
+  all.forEach((song) => song.themes.forEach((t) => themes.add(t)));
+
+  [...themes].sort().forEach((theme) => {
+    const opt = document.createElement("option");
+    opt.value = theme;
+    opt.textContent = theme;
+    select.appendChild(opt);
+  });
+}
+
+/* -------------------------------------------------
+   Filtrage principal — entièrement corrigé
+------------------------------------------------- */
+function applyFilters() {
+  const q = document.querySelector("#searchInput").value.toLowerCase();
+  const selectedTheme = document.querySelector("#themeFilter").value;
+
+  filteredSongs = allSongs.filter((song) => {
+    let ok = true;
+
+    // Recherche plein texte
+    const text =
+      `${song.titre} ${song.auteur} ${song.recueil} ${song.references} ${song.themes.join(" ")}`.toLowerCase();
+
+    if (q && !text.includes(q)) ok = false;
+
+    // Filtre par thème
+    if (selectedTheme && !song.themes.includes(selectedTheme)) ok = false;
+
+    return ok;
+  });
+
+  renderTable(filteredSongs);
 }
