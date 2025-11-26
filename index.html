@@ -1,120 +1,96 @@
-<<<<<<< HEAD:index.html
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Répertoire de chants</title>
-<link rel="stylesheet" href="styles.css">
-<!-- PapaParse CDN -->
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Répertoire de chants</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- PapaParse (lecture CSV) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js" defer></script>
+
+  <!-- App JS (charge après les libs) -->
+  <script src="app.js" defer></script>
 </head>
 <body>
-<header class="topbar">
-<div class="brand">
-<img src="logo.png" alt="Logo du répertoire" id="logo" />
-<h1 id="app-title">Répertoire de chants</h1>
-</div>
-<div class="actions">
-<input id="search" type="search" placeholder="Rechercher un titre, auteur, thème..." aria-label="Recherche" />
-<select id="themeFilter" aria-label="Filtrer par thème">
-<option value="">Tous les thèmes</option>
-</select>
-<a id="addSong" class="btn" target="_blank" rel="noopener">Ajouter un chant</a>
-</div>
-</header>
+  <!-- Barre supérieure -->
+  <header class="topbar" role="banner">
+    <div class="topbar-inner">
+      <!-- Logo : fichier logo.png à la racine -->
+      <img id="site-logo" src="logo.png" alt="Logo du répertoire de chants" />
 
+      <div class="title-group" aria-hidden="false">
+        <h1 class="site-title">Répertoire de chants</h1>
+        <p class="site-subtitle">Catalogue collaboratif — partitions & enregistrements</p>
+      </div>
 
-<main>
-<div class="table-wrapper" role="region" aria-label="Tableau des chants">
-<table id="songsTable">
-<thead>
-<tr>
-<th class="title-col">Titre</th>
-<th class="small-col">Auteur</th>
-<th class="small-col">Recueil</th>
-<th>Thèmes</th>
-<th class="file-col">Partition</th>
-<th class="file-col">Audios</th>
-<th class="small-col">Références</th>
-</tr>
-</thead>
-<tbody>
-<!-- Rempli par app.js -->
-</tbody>
-</table>
-</div>
-</main>
+      <!-- Bouton ajouter : l'URL est injectée depuis app.js via GOOGLE_FORM_URL -->
+      <div class="top-actions">
+        <a id="add-song-btn" class="btn add-btn" target="_blank" rel="noopener noreferrer">
+          ➕ Ajouter un chant
+        </a>
+      </div>
+    </div>
+  </header>
 
+  <!-- Main -->
+  <main class="container" role="main">
+    <!-- Controls : recherche + filtre thèmes -->
+    <section class="controls" aria-label="Recherche et filtres">
+      <div class="search-group">
+        <label for="search-input" class="visually-hidden">Recherche plein texte</label>
+        <input id="search-input" type="search" placeholder="Rechercher (titre, auteur, thème, référence...)" aria-label="Recherche plein texte" />
+      </div>
 
-<footer class="footer">
-<small>Site statique — Déployable sur GitHub Pages</small>
-</footer>
+      <div class="filter-group">
+        <label for="theme-filter" class="visually-hidden">Filtrer par thème</label>
+        <select id="theme-filter" aria-label="Filtrer par thème">
+          <option value="">Tous les thèmes</option>
+          <!-- options remplies dynamiquement -->
+        </select>
+      </div>
+    </section>
 
+    <!-- Tableau principal -->
+    <section class="table-wrapper" aria-label="Tableau des chants">
+      <table id="songs-table" class="songs-table" role="table" aria-describedby="table-desc">
+        <caption id="table-desc" class="visually-hidden">Liste des chants avec partitions et audios</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="col-title">Titre</th>
+            <th scope="col" class="col-author small-text">Auteur</th>
+            <th scope="col" class="col-collection small-text">Recueil</th>
+            <th scope="col" class="col-themes">Thèmes</th>
+            <th scope="col" class="col-scores">Partition</th>
+            <th scope="col" class="col-audios">Audios</th>
+            <th scope="col" class="col-ref small-text">Références</th>
+          </tr>
+        </thead>
 
-<script>
-// Configuration — modifiez ces constantes si nécessaire
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT3t8tr68VdxmjMamPTnlQQuvpjISPBmAkiDHsZr_vSz5EHk-4Z8JQB58xS-4rAP-72dOi4Mr8FmR9i/pub?output=csv";
-const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfjnD-BKH22nMH_Wq3me611ffIaSnI-BeQEDQ48lbWN0FZo2g/viewform";
-const LOGO_FILENAME = "logo.png";
-</script>
-<script src="app.js"></script>
+        <tbody id="songs-body">
+          <!-- Rempli dynamiquement par app.js -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Indicateur d'état / erreurs -->
+    <div id="status" role="status" aria-live="polite" class="status">
+      Chargement des données…
+    </div>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">
+      <small>Site statique — données provenant d'un Google Sheet</small>
+    </div>
+  </footer>
+
+  <noscript>
+    <div class="noscript-warning">
+      JavaScript est requis pour afficher ce répertoire. Activez JavaScript ou consultez le CSV directement.
+    </div>
+  </noscript>
 </body>
-=======
-<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Répertoire de chants</title>
-<link rel="stylesheet" href="styles.css">
-<!-- PapaParse CDN -->
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-</head>
-<body>
-<header class="topbar">
-<div class="brand">
-<img src="logo.png" alt="Logo du répertoire" id="logo" />
-<h1 id="app-title">Répertoire de chants</h1>
-</div>
-<div class="actions">
-<input id="search" type="search" placeholder="Rechercher un titre, auteur, thème..." aria-label="Recherche" />
-<select id="themeFilter" aria-label="Filtrer par thème">
-<option value="">Tous les thèmes</option>
-</select>
-<a id="addSong" class="btn" target="_blank" rel="noopener">Ajouter un chant</a>
-</div>
-</header>
-
-
-<main>
-<div class="table-wrapper" role="region" aria-label="Tableau des chants">
-<table id="songsTable">
-<thead>
-<tr>
-<th class="title-col">Titre</th>
-<th class="small-col">Auteur</th>
-<th class="small-col">Recueil</th>
-<th>Thèmes</th>
-<th class="file-col">Partition</th>
-<th class="file-col">Audios</th>
-<th class="small-col">Références</th>
-</tr>
-</thead>
-<tbody>
-<!-- Rempli par app.js -->
-</tbody>
-</table>
-</div>
-</main>
-
-
-<footer class="footer">
-<small>Site statique — Déployable sur GitHub Pages</small>
-</footer>
-
-
-<script src="app.js"></script>
-</body>
->>>>>>> bb568e8 (Mise à jour du fichier index.html):Index.html
 </html>
