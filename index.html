@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Répertoire de chants</title>
+<link rel="stylesheet" href="styles.css">
+<!-- PapaParse CDN -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+<div class="brand">
+<img src="logo.png" alt="Logo du répertoire" id="logo" />
+<h1 id="app-title">Répertoire de chants</h1>
+</div>
+<div class="actions">
+<input id="search" type="search" placeholder="Rechercher un titre, auteur, thème..." aria-label="Recherche" />
+<select id="themeFilter" aria-label="Filtrer par thème">
+<option value="">Tous les thèmes</option>
+</select>
+<a id="addSong" class="btn" target="_blank" rel="noopener">Ajouter un chant</a>
+</div>
+</header>
+
+
+<main>
+<div class="table-wrapper" role="region" aria-label="Tableau des chants">
+<table id="songsTable">
+<thead>
+<tr>
+<th class="title-col">Titre</th>
+<th class="small-col">Auteur</th>
+<th class="small-col">Recueil</th>
+<th>Thèmes</th>
+<th class="file-col">Partition</th>
+<th class="file-col">Audios</th>
+<th class="small-col">Références</th>
+</tr>
+</thead>
+<tbody>
+<!-- Rempli par app.js -->
+</tbody>
+</table>
+</div>
+</main>
+
+
+<footer class="footer">
+<small>Site statique — Déployable sur GitHub Pages</small>
+</footer>
+
+
+<script>
+// Configuration — modifiez ces constantes si nécessaire
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT3t8tr68VdxmjMamPTnlQQuvpjISPBmAkiDHsZr_vSz5EHk-4Z8JQB58xS-4rAP-72dOi4Mr8FmR9i/pub?output=csv";
+const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfjnD-BKH22nMH_Wq3me611ffIaSnI-BeQEDQ48lbWN0FZo2g/viewform";
+const LOGO_FILENAME = "logo.png";
+</script>
+<script src="app.js"></script>
+</body>
+</html>
