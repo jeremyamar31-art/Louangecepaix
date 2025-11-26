@@ -103,7 +103,7 @@ function populateTable(rows) {
 
     /* ----------- PARTITIONS (fusion PDF) ----------- */
     const tdScores = document.createElement("td");
-    ["Partition (PDF)", "Partition (PDF 2)"].forEach((col) => {
+    ["Partition 1", "Partition 2"].forEach((col) => {
       const link = convertToDirectLink(row[col]);
       if (link) tdScores.appendChild(createBadge("PDF", link, "badge-score"));
     });
@@ -191,3 +191,4 @@ document.addEventListener("DOMContentLoaded", () => {
   // Filtre par thèmes
   document.getElementById("theme-filter").addEventListener("change", applyFilters);
 });
+Partition
