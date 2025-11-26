@@ -1,76 +1,220 @@
-:root{
---table-bg: #ffffff;
---row-height: 56px;
---font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+/* =========================================================
+   Styles généraux
+   ========================================================= */
+:root {
+  --bg: #f8f7f3;
+  --text: #1a1a1a;
+  --accent: #b58d2b;      /* Jaune moutarde pour les bulles audio + bouton */
+  --accent-light: #e9d9a2;
+  --primary: #3e4a56;
+  --border: #d6d6d6;
+
+  --radius: 8px;
+  --small-text: 0.75rem;
+  --line-height: 1.2;
 }
 
-
-*{box-sizing: border-box}
-html,body{height:100%}
-body{
-margin:0;
-font-family:var(--font-sans);
-background:var(--bg);
-color:#111;
--webkit-font-smoothing:antialiased;
+* {
+  box-sizing: border-box;
 }
 
-
-.topbar{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:16px;
-padding:12px 16px;
-background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.8));
-border-bottom:1px solid #eee;
-position:sticky;
-top:0;
-z-index:20;
-}
-.brand{display:flex;align-items:center;gap:12px}
-#logo{height:40px;width:40px;object-fit:contain}
-#app-title{font-size:1rem;margin:0}
-.actions{display:flex;align-items:center;gap:8px}
-.actions input[type=search]{padding:8px 10px;border-radius:8px;border:1px solid #ddd;width:220px}
-.actions select{padding:8px;border-radius:8px;border:1px solid #ddd}
-.btn{
-display:inline-block;padding:8px 12px;border-radius:10px;background:var(--mustard);color:#111;text-decoration:none;font-weight:600
+body {
+  margin: 0;
+  font-family: "Inter", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: var(--line-height);
 }
 
-
-.table-wrapper{padding:16px;overflow:auto}
-#songsTable{width:100%;border-collapse:collapse;background:var(--table-bg);min-width:900px}
-#songsTable thead th{position:sticky;top:56px;background:#fff;padding:10px;text-align:left;border-bottom:2px solid #eee}
-#songsTable tbody tr{height:var(--row-height);border-bottom:1px solid #f0f0f0}
-#songsTable td{padding:8px 10px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.title-col{width:30%}
-.small-col{width:10%;font-size:0.82rem;color:var(--muted)}
-.file-col{width:12%}
-
-
-/* badges */
-.badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:0.85rem;line-height:1;cursor:default}
-.badge.link{cursor:pointer;text-decoration:none;border:1px solid rgba(0,0,0,0.06)}
-.badge.theme{background:transparent;border:1px solid #eee;color:var(--muted)}
-.badge.audio{background:var(--mustard);color:#111}
-.badge.partition{background:#f3f3f3}
-
-
-/* force single-line labels like Mélodie Alto Ténor */
-.badge *{white-space:nowrap}
-
-
-/* Responsive */
-@media (max-width:900px){
-#songsTable{min-width:700px}
-.actions input[type=search]{width:140px}
-}
-@media (max-width:600px){
-.actions{flex-wrap:wrap}
-#songsTable{min-width:600px}
+/* =========================================================
+   Topbar
+   ========================================================= */
+.topbar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
+.topbar-inner {
+  max-width: 1100px;
+  margin: auto;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
-.footer{padding:12px 16px;text-align:center;color:var(--muted);font-size:0.85rem}
+#site-logo {
+  height: 46px;
+  width: auto;
+  margin-right: 1rem;
+}
+
+.title-group h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.title-group p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+/* =========================================================
+   Bouton "Ajouter un chant"
+   ========================================================= */
+.btn {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.add-btn {
+  background: var(--accent);
+  color: white;
+}
+
+.add-btn:hover {
+  background: #caa641;
+}
+
+/* =========================================================
+   Zone de contrôle
+   ========================================================= */
+.controls {
+  max-width: 1100px;
+  margin: 1rem auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.search-group input,
+.filter-group select {
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 260px;
+  font-size: 0.9rem;
+}
+
+/* =========================================================
+   Tableau
+   ========================================================= */
+.table-wrapper {
+  max-width: 1100px;
+  margin: auto;
+  padding: 0 1rem 2rem;
+}
+
+.songs-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border: 1px solid var(--border);
+}
+
+.songs-table th,
+.songs-table td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  height: 3rem;              /* Hauteur FIXE des lignes */
+  white-space: nowrap;        /* AUCUN retour à la ligne */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.songs-table thead th {
+  background: #f2f2f2;
+  font-weight: 600;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+/* Titre mis en valeur */
+.col-title {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Petites colonnes */
+.small-text {
+  font-size: var(--small-text);
+  color: #444;
+}
+
+/* =========================================================
+   Bulles / Badges
+   ========================================================= */
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  margin: 0 0.15rem;
+  font-size: 0.75rem;
+  border-radius: 20px;
+  background: #ddd;
+  color: #333;
+  max-width: 120px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+/* Thèmes : bulles non cliquables */
+.badge-theme {
+  background: var(--accent-light);
+  color: var(--primary);
+  cursor: default;
+}
+
+/* Partition PDF : bulles bleues */
+.badge-score {
+  background: #466fb7;
+  color: white;
+}
+
+/* Audios : bulles jaune moutarde */
+.badge-audio {
+  background: var(--accent);
+  color: white;
+}
+
+/* =========================================================
+   Pied de page
+   ========================================================= */
+.site-footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* =========================================================
+   Accessibilité
+   ========================================================= */
+.visually-hidden {
+  position: absolute;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Avertissement JS désactivé */
+.noscript-warning {
+  background: #900;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
