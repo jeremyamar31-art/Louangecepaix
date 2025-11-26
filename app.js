@@ -1,6 +1,6 @@
-/* -------------------------------------------------
-   Configuration générale
-------------------------------------------------- */
+/* =========================================================
+   CONFIGURATION
+   ========================================================= */
 const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vT3t8tr68VdxmjMamPTnlQQuvpjISPBmAkiDHsZr_vSz5EHk-4Z8JQB58xS-4rAP-72dOi4Mr8FmR9i/pub?output=csv";
 
@@ -9,161 +9,143 @@ const GOOGLE_FORM_URL =
 
 const LOGO_FILENAME = "logo.png";
 
-/* -------------------------------------------------
-   Chargement des données CSV via PapaParse
-------------------------------------------------- */
-document.addEventListener("DOMContentLoaded", () => {
-  loadSheetData();
-  setupUI();
-});
+/* =========================================================
+   UTILITAIRES
+   ========================================================= */
 
-let allSongs = []; // toutes les lignes du CSV
-let filteredSongs = []; // après recherche + filtres
+/** Convertit un lien Google Drive en lien direct téléchargeable */
+function convertToDirectLink(url) {
+  if (!url) return null;
+  url = url.trim();
 
-/* -------------------------------------------------
-   1) Téléchargement du CSV Google Sheet
-------------------------------------------------- */
-function loadSheetData() {
+  // Cas "open?id=..."
+  const idMatch1 = url.match(/open\?id=([^&]+)/);
+  if (idMatch1) return `https://drive.google.com/uc?export=download&id=${idMatch1[1]}`;
+
+  // Cas "file/d/.../"
+  const idMatch2 = url.match(/\/file\/d\/([^/]+)/);
+  if (idMatch2) return `https://drive.google.com/uc?export=download&id=${idMatch2[1]}`;
+
+  return url; // URL normale
+}
+
+/** Crée une bulle (badge) */
+function createBadge(label, url, className) {
+  const span = document.createElement("span");
+  span.className = `badge ${className}`;
+
+  if (url) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.textContent = label;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    span.appendChild(a);
+  } else {
+    span.textContent = label;
+  }
+  return span;
+}
+
+/* =========================================================
+   CHARGEMENT DU CSV
+   ========================================================= */
+function loadCSV() {
   Papa.parse(SHEET_CSV_URL, {
     download: true,
     header: true,
     skipEmptyLines: true,
-    complete: function (results) {
-      allSongs = results.data.map(normalizeRow);
-      filteredSongs = [...allSongs];
-      populateThemeFilter(allSongs);
-      renderTable(filteredSongs);
+    complete: (results) => {
+      const rows = results.data;
+      populateTable(rows);
+      populateThemeFilter(rows);
+      document.getElementById("status").textContent = "";
+    },
+    error: () => {
+      document.getElementById("status").textContent =
+        "Erreur lors du chargement des données.";
     },
   });
 }
 
-/* -------------------------------------------------
-   2) Normalisation d'une ligne CSV
-------------------------------------------------- */
-function normalizeRow(row) {
-  const safe = (v) => (v ? v.trim() : "");
-
-  return {
-    titre: safe(row["Titre"] || row["title"]),
-    auteur: safe(row["Auteur"] || row["author"]),
-    recueil: safe(row["Recueil"] || ""),
-
-    themes: safe(row["Thèmes"] || row["Themes"] || "")
-      .split(",")
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0),
-
-    partition1: convertGoogleLink(safe(row["Partition (PDF)"] || "")),
-    partition2: convertGoogleLink(safe(row["Partition (PDF 2)"] || "")),
-
-    audioMelodie: convertGoogleLink(safe(row["Mélodie"] || "")),
-    audioAlto: convertGoogleLink(safe(row["Alto"] || "")),
-    audioTenor: convertGoogleLink(safe(row["Ténor"] || "")),
-
-    references: safe(row["Références bibliques"] || row["Refs"] || ""),
-  };
-}
-
-/* -------------------------------------------------
-   Conversion des liens Google Drive → direct download
-------------------------------------------------- */
-function convertGoogleLink(url) {
-  if (!url || !url.includes("drive.google.com")) return url;
-  const idMatch = url.match(/\/d\/(.*?)\//);
-  if (!idMatch) return url;
-  return `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
-}
-
-/* -------------------------------------------------
-   3) Affichage du tableau principal
-------------------------------------------------- */
-function renderTable(data) {
-  const tbody = document.querySelector("#songsTableBody");
+/* =========================================================
+   TABLEAU
+   ========================================================= */
+function populateTable(rows) {
+  const tbody = document.getElementById("songs-body");
   tbody.innerHTML = "";
 
-  data.forEach((song) => {
+  rows.forEach((row) => {
     const tr = document.createElement("tr");
 
-    tr.innerHTML = `
-      <td class="col-title">${song.titre}</td>
-      <td class="col-small">${song.auteur}</td>
-      <td class="col-small">${song.recueil}</td>
-      <td>${renderThemeBadges(song.themes)}</td>
-      <td>${renderPartitionBadges(song)}</td>
-      <td>${renderAudioBadges(song)}</td>
-      <td class="col-small">${song.references}</td>
-    `;
+    /* ----------- Colonnes simples ----------- */
+    const tdTitle = document.createElement("td");
+    tdTitle.textContent = row["Titre"] || "";
+    tr.appendChild(tdTitle);
+
+    const tdAuthor = document.createElement("td");
+    tdAuthor.textContent = row["Auteur"] || "";
+    tr.appendChild(tdAuthor);
+
+    const tdCollection = document.createElement("td");
+    tdCollection.textContent = row["Recueil"] || "";
+    tr.appendChild(tdCollection);
+
+    /* ----------- Thèmes ----------- */
+    const tdThemes = document.createElement("td");
+    const themesRaw = row["Thèmes"] || "";
+    const themes = themesRaw.split(/[,;]+/).map((t) => t.trim()).filter(Boolean);
+
+    themes.forEach((theme) => {
+      tdThemes.appendChild(createBadge(theme, null, "badge-theme"));
+    });
+    tr.appendChild(tdThemes);
+
+    /* ----------- PARTITIONS (fusion PDF) ----------- */
+    const tdScores = document.createElement("td");
+    ["Partition (PDF)", "Partition (PDF 2)"].forEach((col) => {
+      const link = convertToDirectLink(row[col]);
+      if (link) tdScores.appendChild(createBadge("PDF", link, "badge-score"));
+    });
+    tr.appendChild(tdScores);
+
+    /* ----------- AUDIOS (fusion Mélodie / Alto / Ténor) ----------- */
+    const tdAudios = document.createElement("td");
+    [
+      ["Mélodie", "Mélodie"],
+      ["Alto", "Alto"],
+      ["Ténor", "Ténor"],
+    ].forEach(([col, label]) => {
+      const link = convertToDirectLink(row[col]);
+      if (link) tdAudios.appendChild(createBadge(label, link, "badge-audio"));
+    });
+    tr.appendChild(tdAudios);
+
+    /* ----------- Références ----------- */
+    const tdRefs = document.createElement("td");
+    tdRefs.textContent = row["Références bibliques"] || "";
+    tr.appendChild(tdRefs);
 
     tbody.appendChild(tr);
   });
 }
 
-/* -------------------------------------------------
-   4) Badges Thèmes
-------------------------------------------------- */
-function renderThemeBadges(list) {
-  return list
-    .map((t) => `<span class="badge badge-theme">${t}</span>`)
-    .join("");
-}
+/* =========================================================
+   FILTRE PAR THÈME
+   ========================================================= */
+function populateThemeFilter(rows) {
+  const allThemes = new Set();
 
-/* -------------------------------------------------
-   5) Badges Partition
-------------------------------------------------- */
-function renderPartitionBadges(s) {
-  let out = "";
-
-  if (s.partition1)
-    out += `<a class="badge badge-link" href="${s.partition1}" target="_blank">PDF 1</a>`;
-
-  if (s.partition2)
-    out += `<a class="badge badge-link" href="${s.partition2}" target="_blank">PDF 2</a>`;
-
-  return out || "";
-}
-
-/* -------------------------------------------------
-   6) Badges Audio (moutarde)
-------------------------------------------------- */
-function renderAudioBadges(s) {
-  let out = "";
-
-  if (s.audioMelodie)
-    out += `<a class="badge badge-audio" href="${s.audioMelodie}" target="_blank">Mélodie</a>`;
-
-  if (s.audioAlto)
-    out += `<a class="badge badge-audio" href="${s.audioAlto}" target="_blank">Alto</a>`;
-
-  if (s.audioTenor)
-    out += `<a class="badge badge-audio" href="${s.audioTenor}" target="_blank">Ténor</a>`;
-
-  return out || "";
-}
-
-/* -------------------------------------------------
-   7) Recherche + Filtre
-------------------------------------------------- */
-function setupUI() {
-  document
-    .querySelector("#searchInput")
-    .addEventListener("input", applyFilters);
-
-  document
-    .querySelector("#themeFilter")
-    .addEventListener("change", applyFilters);
-
-  document.querySelector("#addSongBtn").addEventListener("click", () => {
-    window.open(GOOGLE_FORM_URL, "_blank");
+  rows.forEach((row) => {
+    (row["Thèmes"] || "")
+      .split(/[,;]+/)
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .forEach((t) => allThemes.add(t));
   });
-}
 
-function populateThemeFilter(all) {
-  const select = document.querySelector("#themeFilter");
-  const themes = new Set();
-
-  all.forEach((song) => song.themes.forEach((t) => themes.add(t)));
-
-  [...themes].sort().forEach((theme) => {
+  const select = document.getElementById("theme-filter");
+  [...allThemes].sort().forEach((theme) => {
     const opt = document.createElement("option");
     opt.value = theme;
     opt.textContent = theme;
@@ -171,27 +153,41 @@ function populateThemeFilter(all) {
   });
 }
 
-/* -------------------------------------------------
-   Filtrage principal — entièrement corrigé
-------------------------------------------------- */
+/* =========================================================
+   RECHERCHE + FILTRE
+   ========================================================= */
 function applyFilters() {
-  const q = document.querySelector("#searchInput").value.toLowerCase();
-  const selectedTheme = document.querySelector("#themeFilter").value;
+  const query = document.getElementById("search-input").value.toLowerCase();
+  const theme = document.getElementById("theme-filter").value;
 
-  filteredSongs = allSongs.filter((song) => {
-    let ok = true;
+  const rows = [...document.querySelectorAll("#songs-body tr")];
 
-    // Recherche plein texte
-    const text =
-      `${song.titre} ${song.auteur} ${song.recueil} ${song.references} ${song.themes.join(" ")}`.toLowerCase();
+  rows.forEach((tr) => {
+    const text = tr.textContent.toLowerCase();
+    const matchesQuery = text.includes(query);
 
-    if (q && !text.includes(q)) ok = false;
+    let matchesTheme = true;
+    if (theme) {
+      const themesCell = tr.children[3];
+      matchesTheme = themesCell.textContent.includes(theme);
+    }
 
-    // Filtre par thème
-    if (selectedTheme && !song.themes.includes(selectedTheme)) ok = false;
-
-    return ok;
+    tr.style.display = matchesQuery && matchesTheme ? "" : "none";
   });
-
-  renderTable(filteredSongs);
 }
+
+/* =========================================================
+   INIT
+   ========================================================= */
+document.addEventListener("DOMContentLoaded", () => {
+  // Injecter l’URL du bouton "Ajouter un chant"
+  document.getElementById("add-song-btn").href = GOOGLE_FORM_URL;
+
+  loadCSV();
+
+  // Recherche
+  document.getElementById("search-input").addEventListener("input", applyFilters);
+
+  // Filtre par thèmes
+  document.getElementById("theme-filter").addEventListener("change", applyFilters);
+});
