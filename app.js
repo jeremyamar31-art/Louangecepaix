@@ -103,7 +103,7 @@ function populateTable(rows) {
 
     /* ----------- PARTITIONS (fusion PDF) ----------- */
     const tdScores = document.createElement("td");
-    ["Partition 1", "Partition 2"].forEach((col) => {
+    ["Partition", "Partition2"].forEach((col) => {
       const link = convertToDirectLink(row[col]);
       if (link) tdScores.appendChild(createBadge("PDF", link, "badge-score"));
     });
