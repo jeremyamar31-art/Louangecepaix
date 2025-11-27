@@ -254,3 +254,16 @@ td.col-ref {
 .badge-audio:hover {
   text-decoration: none !important;
 }
+
+/* Première colonne fixe (Titre) */
+.songs-table th:first-child,
+.songs-table td:first-child {
+  position: sticky;
+  left: 0;
+  background: white;        /* Pour éviter que le texte passe sous les lignes */
+  z-index: 5;               /* Au-dessus des autres cellules */
+  border-right: 1px solid var(--border);
+}
+.songs-table td:first-child {
+  font-weight: 600;
+}
