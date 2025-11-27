@@ -195,12 +195,12 @@ td.col-ref {
   transform: translateY(-2px);
 }
 
-/* Bulles NON cliquables → Thèmes */
+/* Bulles non cliquables → Thèmes */
 .badge-theme {
-  background: var(--accent-light);
+  background: #f0f0f0;              /* Gris clair */
   color: var(--primary);
+  border: 1px dashed #bfbfbf;       /* Contour en pointillé */
   cursor: default;
-  border: 1px solid #d1c48c;
 }
 
 .badge:hover,
@@ -247,3 +247,10 @@ td.col-ref {
   color: #444;
 }
 
+/* Aucune bulle cliquable ne doit être soulignée */
+.badge-score,
+.badge-score:hover,
+.badge-audio,
+.badge-audio:hover {
+  text-decoration: none !important;
+}
