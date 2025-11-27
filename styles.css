@@ -66,13 +66,13 @@ body {
 }
 
 /* =========================================================
-   Bouton "Ajouter un chant"
+   Bouton "ajouter un chant"
    ========================================================= */
 .btn {
   display: inline-block;
   padding: 0.45rem 1rem;
-  border-radius: 25px;       /* Style moderne */
-  text-decoration: none;
+  border-radius: 25px;
+  text-decoration: none !important;
   font-weight: 600;
   transition: 0.2s ease-in-out;
   white-space: nowrap;
@@ -85,11 +85,10 @@ body {
 }
 
 .add-btn:hover {
-  background: #c09524;       /* Léger foncé */
+  background: #c09524;
   transform: translateY(-2px);
 }
 
-/* Empêche toute forme de soulignement */
 .btn, .btn:hover, .btn:focus {
   text-decoration: none !important;
 }
@@ -154,9 +153,12 @@ body {
   color: var(--primary);
 }
 
-/* Colonnes compactes (Auteur, Recueil, Référence) */
-.small-text {
-  font-size: var(--small-text);
+/* TEXTES RÉDUITS (AUTEUR / RECUEIL / RÉFÉRENCE) */
+td.col-author,
+td.col-collection,
+td.col-ref {
+  font-size: 0.65rem;   /* ~ moitié plus petit */
+  line-height: 1.1;
   color: #444;
 }
 
@@ -175,30 +177,32 @@ body {
   text-overflow: ellipsis;
   overflow: hidden;
   vertical-align: middle;
-  text-decoration: none !important;    /* PAS DE SOULIGNEMENT */
+  text-decoration: none !important;
+  border: none;
 }
 
-/* Bulles cliquables : partitions bleues */
-.badge-score {
-  background: #466fb7;
-  color: white;
-}
-
-/* Bulles cliquables : audios moutarde */
+/* Bulles CLIQUABLES (PDF + Audio) = JAUNE MOUTARDE */
+.badge-score,
 .badge-audio {
   background: var(--accent);
   color: white;
+  font-weight: 600;
 }
 
-/* Bulles non cliquables → Thèmes */
+.badge-score:hover,
+.badge-audio:hover {
+  background: #c09524;
+  transform: translateY(-2px);
+}
+
+/* Bulles NON cliquables → Thèmes */
 .badge-theme {
   background: var(--accent-light);
   color: var(--primary);
   cursor: default;
-  border: 1px solid #d1c48c;            /* Légère bordure pour distinguer */
+  border: 1px solid #d1c48c;
 }
 
-/* Supprime définitivement tout soulignement même sur hover */
 .badge:hover,
 .badge:focus,
 .badge:active {
