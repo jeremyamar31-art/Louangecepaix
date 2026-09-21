@@ -185,4 +185,3 @@ document.addEventListener("DOMContentLoaded", () => {
   // Filtre par thèmes
   document.getElementById("theme-filter").addEventListener("change", applyFilters);
 });
-Partition
