@@ -180,8 +180,6 @@ function applyFilters() {
    INIT
    ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
-  // Injecter l’URL du bouton "Ajouter un chant"
-  document.getElementById("add-song-btn").href = GOOGLE_FORM_URL;
 
   loadCSV();
 
