@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+
+
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chants hors liste</title>
+  <!-- Icône du site -->
+  <link rel="icon" type="image/png" href="logo.PNG" />
+  <link rel="apple-touch-icon" href="logo.PNG" />
+
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- PapaParse (lecture CSV) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js" defer></script>
+
+  <!-- App JS (charge après les libs) -->
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <!-- Barre supérieure -->
+  <header class="topbar" role="banner">
+    <div class="topbar-inner">
+      <!-- Logo : fichier logo.png à la racine -->
+      <img id="site-logo" src="logo.PNG" alt="Logo du répertoire de chants" />
+
+      <div class="title-group" aria-hidden="false">
+        <h1 class="site-title">Répertoire de chants</h1>
+        <p class="site-subtitle">CEP Aix</p>
+      </div>
+
+      <!-- Bouton ajouter : l'URL est injectée depuis app.js via GOOGLE_FORM_URL -->
+      <div class="top-actions">
+        <a href="hors-liste.html" class="btn add-btn">
+          Chants hors liste
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="container" role="main">
+    <!-- Controls : recherche + filtre thèmes -->
+    <section class="controls" aria-label="Recherche et filtres">
+      <div class="search-group">
+        <label for="search-input" class="visually-hidden">Recherche plein texte</label>
+        <input id="search-input" type="search" placeholder="Rechercher (titre, auteur, thème, référence...)" aria-label="Recherche plein texte" />
+      </div>
+
+      <div class="filter-group">
+        <label for="theme-filter" class="visually-hidden">Filtrer par thème</label>
+        <select id="theme-filter" aria-label="Filtrer par thème">
+          <option value="">Tous les thèmes</option>
+          <!-- options remplies dynamiquement -->
+        </select>
+      </div>
+    </section>
+
+    <!-- Tableau principal -->
+    <section class="table-wrapper" aria-label="Tableau des chants">
+      <table id="songs-table" class="songs-table" role="table" aria-describedby="table-desc">
+        <caption id="table-desc" class="visually-hidden">Liste des chants avec partitions et audios</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="col-title">Titre</th>
+            <th scope="col" class="col-author small-text">Auteur</th>
+            <th scope="col" class="col-collection small-text">Recueil</th>
+            <th scope="col" class="col-themes">Thèmes</th>
+            <th scope="col" class="col-scores">Partition</th>
+            <th scope="col" class="col-audios">Audios</th>
+            <th scope="col" class="col-ref small-text">Références</th>
+          </tr>
+        </thead>
+
+        <tbody id="songs-body">
+          <!-- Rempli dynamiquement par app.js -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Indicateur d'état / erreurs -->
+    <div id="status" role="status" aria-live="polite" class="status">
+      Chargement des données…
+    </div>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">
+      <small>Site statique — données provenant d'un Google Sheet</small>
+    </div>
+  </footer>
+
+  <noscript>
+    <div class="noscript-warning">
+      JavaScript est requis pour afficher ce répertoire. Activez JavaScript ou consultez le CSV directement.
+    </div>
+  </noscript>
+</body>
+</html>
